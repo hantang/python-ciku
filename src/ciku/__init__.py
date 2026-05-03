@@ -1,7 +1,7 @@
 from .parser import SogouParser, BaiduParser, BaiduMobileParser, QQParser, QQV1Parser, HuayuParser
 from .parser import BaiduPCParser, QQV2Parser
 
-__version__ = "0.3.0"
+__version__ = "0.3.1"
 
 __all__ = [
     "SogouParser",
