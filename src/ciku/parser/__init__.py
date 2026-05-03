@@ -1,7 +1,12 @@
-from .sogou import SogouParser
-from .baidu import BaiduParser, BaiduMobileParser, BaiduParser as BaiduPCParser
-from .qq import QQParser, QQV1Parser, QQParser as QQV2Parser
+from .baidu import BaiduMobileParser, BaiduParser
 from .huayu import HuayuParser
+from .qq import QQV1Parser
+from .qq2 import QQParser
+from .sogou import SogouParser
+# alias
+from .baidu import BaiduParser as BaiduPCParser
+from .qq2 import QQParser as QQV2Parser
+
 
 __all__ = [
     "SogouParser",

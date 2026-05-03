@@ -1,6 +1,8 @@
+"""
+华宇拼音
+"""
 
-
-# 华宇拼音
+# 华宇拼音-声母表，包括零声母
 HUAYU_PINYIN_INITIALS = [
     "",
     "b",
@@ -28,7 +30,7 @@ HUAYU_PINYIN_INITIALS = [
     "zh",
 ]
 
-# ang出现两次
+# 华宇拼音-韵母表，其中ang出现两次
 HUAYU_PINYIN_FINALS = [
     "ang",
     "a",

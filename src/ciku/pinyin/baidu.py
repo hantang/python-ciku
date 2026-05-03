@@ -1,4 +1,8 @@
-# 汉语拼音声母
+"""
+百度拼音
+"""
+
+# 百度拼音-声母表
 BAIDU_PINYIN_INITIALS = [
     "c",
     "d",
@@ -25,7 +29,7 @@ BAIDU_PINYIN_INITIALS = [
     "y",
     "z",
 ]
-# 韵母
+# 百度拼音-韵母
 BAIDU_PINYIN_FINALS = [
     "uang",
     "iang",

@@ -1,10 +1,4 @@
 """
-QQ新版: 格式基本同搜狗(.scel)
-- 词库网址: https://cdict.qq.pinyin.cn
-- 文件后缀：.qcel
-
----
-
 QQ v1（6.0以下版本词库）: 没有拼音映射表，直接拼音编码；中间词库部分使用zlib压缩
 - 词库网址：https://cdict.qq.pinyin.cn/v1/
 - 文件后缀：.qpyd
@@ -33,22 +27,6 @@ from pathlib import Path
 from ..core.base import BaseParser
 from ..core.models import DictCell, DictField, DictMeta, DictStruct, WordEntry
 from ..core.utils import byte2uint
-
-from .sogou import SogouParser
-
-
-class QQParser(SogouParser):
-    suffix: str = "qcel"
-
-    def _decode_text(
-        self,
-        data: bytes,
-        offset: DictField | None,
-        encoding: str | None = None,
-        is_strip: bool = True,
-    ) -> str:
-        out = super()._decode_text(data, offset, encoding, is_strip)
-        return out.split("\x00")[0]
 
 
 class QQV1DictStruct(DictStruct):
@@ -99,9 +77,7 @@ class QQV1Parser(BaseParser):
         offset_word = self.offset_word
         count = self.count
         data_info = self._decode_text(data[struct.description.start : offset_word], None)
-        data_info_dict = dict(
-            [v.strip().split(": ", 1) for v in data_info.split("\r\n") if v.strip()]
-        )
+        data_info_dict = dict([v.strip().split(": ", 1) for v in data_info.split("\r\n") if v.strip()])
 
         name = data_info_dict.get("Name", "")
         category = " ".join([data_info_dict.get("Type", ""), data_info_dict.get("FirstType", "")])
@@ -139,9 +115,7 @@ class QQV1Parser(BaseParser):
 
             pinyin_data = word_data[word_index:word_index2]
             pinyin_list = pinyin_data.decode("utf-8").split("'")  # 自带'进行分割
-            word = self._decode_text(
-                word_data[word_index2 : word_index2 + word_len], None, None, False
-            )
+            word = self._decode_text(word_data[word_index2 : word_index2 + word_len], None, None, False)
             is_error = len(pinyin_data) == len(pinyin_list) or self._check_pinyin(pinyin_list)
             entry = WordEntry(word, pinyin_list, weight, is_error=is_error)
             word_list.append(entry)

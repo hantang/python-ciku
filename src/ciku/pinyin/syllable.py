@@ -2,6 +2,10 @@
 现代汉语音节汇总（无声调）
 共有426个音节+变形（ü/ê）
 https://github.com/zispace/hanyu-pinyin/blob/main/data/汉语音节统计汇总-无声调.txt
+basic: 399
+extra: 7
+rare: 20
+ü: 4 + 2
 """
 
 BASIC_PINYIN_SYLLABLES = [
@@ -20,7 +24,6 @@ BASIC_PINYIN_SYLLABLES = [
     "beng",
     "bi",
     "bian",
-    "biang",
     "biao",
     "bie",
     "bin",
@@ -33,7 +36,6 @@ BASIC_PINYIN_SYLLABLES = [
     "cang",
     "cao",
     "ce",
-    "cei",
     "cen",
     "ceng",
     "cha",
@@ -48,7 +50,6 @@ BASIC_PINYIN_SYLLABLES = [
     "chong",
     "chou",
     "chu",
-    "chua",
     "chuai",
     "chuan",
     "chuang",
@@ -69,11 +70,8 @@ BASIC_PINYIN_SYLLABLES = [
     "dang",
     "dao",
     "de",
-    "dei",
-    "den",
     "deng",
     "di",
-    "dia",
     "dian",
     "diao",
     "die",
@@ -87,8 +85,6 @@ BASIC_PINYIN_SYLLABLES = [
     "dun",
     "duo",
     "e",
-    "ê",
-    "ei",
     "en",
     "eng",
     "er",
@@ -98,7 +94,6 @@ BASIC_PINYIN_SYLLABLES = [
     "fei",
     "fen",
     "feng",
-    "fiao",
     "fo",
     "fou",
     "fu",
@@ -160,7 +155,6 @@ BASIC_PINYIN_SYLLABLES = [
     "kang",
     "kao",
     "ke",
-    "kei",
     "ken",
     "keng",
     "kong",
@@ -182,7 +176,6 @@ BASIC_PINYIN_SYLLABLES = [
     "lei",
     "leng",
     "li",
-    "lia",
     "lian",
     "liang",
     "liao",
@@ -190,13 +183,11 @@ BASIC_PINYIN_SYLLABLES = [
     "lin",
     "ling",
     "liu",
-    "lo",
     "long",
     "lou",
     "lu",
     "lü",
     "luan",
-    "lüan",
     "lüe",
     "lun",
     "luo",
@@ -237,12 +228,10 @@ BASIC_PINYIN_SYLLABLES = [
     "ning",
     "niu",
     "nong",
-    "nou",
     "nu",
     "nü",
     "nuan",
     "nüe",
-    "nun",
     "nuo",
     "o",
     "ou",
@@ -255,7 +244,6 @@ BASIC_PINYIN_SYLLABLES = [
     "pen",
     "peng",
     "pi",
-    "pia",
     "pian",
     "piao",
     "pie",
@@ -288,7 +276,6 @@ BASIC_PINYIN_SYLLABLES = [
     "rong",
     "rou",
     "ru",
-    "rua",
     "ruan",
     "rui",
     "run",
@@ -299,7 +286,6 @@ BASIC_PINYIN_SYLLABLES = [
     "sang",
     "sao",
     "se",
-    "sei",
     "sen",
     "seng",
     "sha",
@@ -335,7 +321,6 @@ BASIC_PINYIN_SYLLABLES = [
     "tang",
     "tao",
     "te",
-    "tei",
     "teng",
     "ti",
     "tian",
@@ -373,7 +358,6 @@ BASIC_PINYIN_SYLLABLES = [
     "xue",
     "xun",
     "ya",
-    "yai",
     "yan",
     "yang",
     "yao",
@@ -403,7 +387,6 @@ BASIC_PINYIN_SYLLABLES = [
     "zhang",
     "zhao",
     "zhe",
-    "zhei",
     "zhen",
     "zheng",
     "zhi",
@@ -427,7 +410,40 @@ BASIC_PINYIN_SYLLABLES = [
     "zuo",
 ]
 
-EXTRA_PINYIN_SYLLABLES = ["ei", "hm", "hng", "m", "n", "ng", "q"]
-YU_PINYIN_SYLLABLES = [v.replace("ü", "v") for v in BASIC_PINYIN_SYLLABLES if "ü" in v] + ["lue", "nue"]
+EXTRA_PINYIN_SYLLABLES = [
+    "ei",
+    "hm",
+    "hng",
+    "m",
+    "n",
+    "ng",
+    "q",
+]
 
-PINYIN_SYLLABLES = BASIC_PINYIN_SYLLABLES + EXTRA_PINYIN_SYLLABLES + YU_PINYIN_SYLLABLES
+RARE_PINYIN_SYLLABLES = [
+    "biang",
+    "cei",
+    "chua",
+    "dei",
+    "den",
+    "dia",
+    "ê",
+    "fiao",
+    "kei",
+    "lia",
+    "lo",
+    "lüan",
+    "nou",
+    "nun",
+    "pia",
+    "rua",
+    "sei",
+    "tei",
+    "yai",
+    "zhei",
+]
+
+# "lü", "lüe", "nü", "nüe"使用v模式；以及两个错误拼写
+YU_PINYIN_SYLLABLES = ["lv", "lve", "nv", "nve"] + ["lue", "nue"]
+
+PINYIN_SYLLABLES = BASIC_PINYIN_SYLLABLES + EXTRA_PINYIN_SYLLABLES + RARE_PINYIN_SYLLABLES + YU_PINYIN_SYLLABLES
