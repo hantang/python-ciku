@@ -218,8 +218,7 @@ __marimo__/
 
 # more
 .venv-*/
-uv.lock
+# uv.lock
 .python-version
 trash/
 temp/
-
