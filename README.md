@@ -11,7 +11,7 @@
 
 中文输入法词库文件（细胞词库）解析工具。
 
-> Chinese IME ciku (aka cell wordlist file) parsing tool.
+> Chinese IME ciku (aka word list / lexicon file) parsing tool.
 
 支持：
 
@@ -27,10 +27,10 @@
 ```python
 # 安装
 # pip install ciku # ime-utils
-# uv pip install . # 本地
+# uv pip install -e . # 本地安装（Editable packages）
 
 # 用例：
-from ime_utils.parser import SogouParser, BaiduParser
+from ciku import SogouParser, BaiduParser
 
 parser = BaiduParser()
 files = [
@@ -49,7 +49,7 @@ for file in files:
 - 命令行调用
 
 ```shell
-# 或者 python -m ime_utils -f file-names -o output
+# 或者 python -m ciku -f file-names -o output
 
 # 指定多个文件
 ciku -f file-name1,file-name2 -o output
@@ -60,10 +60,12 @@ ciku -d file-dir -o text -e -r
 ## 开发
 
 ```shell
-# 开发环境
-uv sync --dev --all-extras # --locked
+# 安装uv <https://docs.astral.sh/uv/>
 
-# 提交前检查
+# 开发环境
+uv sync # --dev --all-extras # --locked
+
+# 提交前检查语法等
 uvx ruff check .
 uvx mypy .
 
@@ -73,12 +75,5 @@ uv build
 
 ## 相关
 
-- [:link: 蔷薇词库转换 nopdan/rose](https://github.com/nopdan/rose)
-  ![](https://img.shields.io/github/v/release/nopdan/rose)
-  ![](https://img.shields.io/github/license/nopdan/rose)
-  ![](https://img.shields.io/github/last-commit/nopdan/rose)
-
-- [:link: 深蓝词库转换 studyzy/imewlconverter](https://github.com/studyzy/imewlconverter)
-  ![](https://img.shields.io/github/v/release/studyzy/imewlconverter)
-  ![](https://img.shields.io/github/license/studyzy/imewlconverter)
-  ![](https://img.shields.io/github/last-commit/studyzy/imewlconverter)
+- [蔷薇词库转换 github-nopdan/rose](https://github.com/nopdan/rose)
+- [深蓝词库转换 github-studyzy/imewlconverter](https://github.com/studyzy/imewlconverter)
