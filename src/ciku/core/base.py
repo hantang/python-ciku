@@ -33,7 +33,7 @@ class BaseParser(ABC):
 
     def check(self, data: bytes | None) -> bool:
         if not data:
-            logging.error("文件数据为空")
+            logging.error(f"{self.current_file} 文件数据为空")
             return False
         return True
 
@@ -45,7 +45,7 @@ class BaseParser(ABC):
     def extract_words(self, data: bytes, allow_error: bool = False) -> list[WordEntry]:
         pass
 
-    def read_data(self, file_path: Path | str) -> bytes:
+    def _read_data(self, file_path: Path | str) -> bytes:
         file = Path(file_path)
         if not file.exists():
             raise FileExistsError(f"文件 {file} 不存在")
@@ -59,6 +59,7 @@ class BaseParser(ABC):
     def save_data(
         self,
         save_file: Path | str,
+        *,
         keep_error: bool = False,
         meta_comment: str = "#",
         meta_sep: str = " ",
@@ -108,7 +109,7 @@ class BaseParser(ABC):
     def export_data(self, keep_error: bool = False) -> dict[str, list[str]]:
         """导出数据，meta和词库列表"""
         if self.dict_cell is None:
-            logging.warning("Dict cell data is None")
+            logging.warning("解析词库列表为空")
             return {"meta": [], "words": []}
 
         meta_list = self.dict_cell.metadata.to_list()
@@ -117,6 +118,63 @@ class BaseParser(ABC):
 
         result = {"meta": meta_list, "words": word_list}
         return result
+
+    def parse_save(
+        self,
+        file_path: Path | str,
+        save_file: Path | str,
+        *,
+        keep_error: bool = False,
+        meta_comment: str = "#",
+        meta_sep: str = " ",
+        meta_key_sep: str = ":",
+        meta_example_sep: str = "、",
+        keep_all_meta: bool = False,
+        keep_filename: bool = False,
+        field_sep: str = "\t",
+        code_sep: str = " ",
+        word_first: bool = True,
+        keep_weight: bool = True,
+    ) -> bool:
+        if self.parse(file_path):
+            return self.save_data(
+                save_file,
+                keep_error=keep_error,
+                meta_comment=meta_comment,
+                meta_sep=meta_sep,
+                meta_key_sep=meta_key_sep,
+                meta_example_sep=meta_example_sep,
+                keep_all_meta=keep_all_meta,
+                keep_filename=keep_filename,
+                field_sep=field_sep,
+                code_sep=code_sep,
+                word_first=word_first,
+                keep_weight=keep_weight,
+            )
+        return False
+
+    def parse_save_batch(
+        self,
+        data_dir: Path | str,
+        save_dir: Path | str,
+        save_suffix: str = ".txt",
+        *,
+        keep_error: bool = False,
+    ):
+        if not Path(data_dir).exists():
+            logging.info(f"数据目录 = {data_dir} 不存在")
+            return
+        files = sorted(Path(data_dir).rglob(f"*.{self.suffix}"))
+        total_count = len(files)
+        logging.info(f"共发现文件 = {total_count}")
+        if not files:
+            return
+        success_count = 0
+        for file in files:
+            save_file = Path(save_dir, file.relative_to(data_dir)).with_suffix(save_suffix)
+            if self.parse(file) and self.save_data(save_file, keep_error=keep_error):
+                success_count += 1
+        logging.info(f"Process successful = {success_count} / {total_count}")
 
     def _decode_text(
         self,

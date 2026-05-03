@@ -65,7 +65,7 @@ from ..pinyin.huayu import HUAYU_PINYIN_INITIALS as PINYIN_INITIALS
 
 
 def read_zipfile(
-    file: str | PathLike[str], suffix: str, encoding: str | None = "gbk"
+    file: str | PathLike[str], suffix: str, encoding: str | None = "gbk", file_index: int = 0
 ) -> bytes | None:
     import zipfile
 
@@ -74,10 +74,11 @@ def read_zipfile(
         # name.encode("cp437").decode("gbk")
         names_valid = [name for name in names if name.endswith(suffix)]
         if not names_valid:
-            logging.warning(f"suffix={suffix} name file is None: {names}")
+            logging.warning(f"{suffix}文件内缺少压缩文件: {names}")
             return None
-        filename = names_valid[0]
-        logging.info(f"文件名为 = {filename}")
+
+        filename = names_valid[file_index]
+        logging.info(f"选择第{file_index}个文件 = {filename}")
         with zf.open(filename) as f:
             data = f.read()
 
@@ -145,12 +146,12 @@ class HuayuParser(BaseParser):
 
     def check(self, data: bytes | None) -> bool:
         if data and data[:4] not in [b"\x94\x19\x08\x14", b"\x94\x19\x09\x14"]:
-            logging.error(f"文件前缀格式不符合: {self.current_file}")
+            logging.error(f" {self.current_file} 文件格式不符{self.suffix}规范")
             return False
         return super().check(data)
 
     def _preprocess(self, file_path: Path) -> bytes | None:
-        data = self.read_data(file_path)
+        data = self._read_data(file_path)
         if data:
             if data[:2] == b"PK":
                 logging.warning(f"文件格式为ZIP，解压处理中：{file_path}")
@@ -200,7 +201,7 @@ class HuayuParser(BaseParser):
         assert header_len + max_len <= len(data)
         word_part = data[header_len : header_len + max_len]
         if index != seg_index:
-            logging.warning("Segment indexes are not consistent")
+            logging.warning("词库文件解析，分段索引不匹配")
 
         word_list = []
         pos = 0
@@ -231,9 +232,7 @@ class HuayuParser(BaseParser):
             pos += word_len
             if pinyin_len < 16 and word_len != pinyin_len:  # 部分uwl中拼音最大长度只有8（16字节）
                 # 词语有特殊字符，导致长度不同，比如人名中含有字符·－
-                logging.debug(
-                    f"词语/拼音长度不一致：{word_len}/{pinyin_len}: {' '.join(pinyin_list)} / {word}"
-                )
+                logging.debug(f"词语/拼音长度不一致：{word_len}/{pinyin_len}: {' '.join(pinyin_list)} / {word}")
             if word is None:
                 continue
 
@@ -272,9 +271,7 @@ class HuayuParser(BaseParser):
             py_final = self.code_map.get(n1 + idx_final, "*")
             pinyin_list.append(py_initial + py_final)
             if idx_initial >= n1 or idx_final >= n2:
-                logging.warning(
-                    f"Out of bound index: 声母={idx_initial}, 韵母={idx_final}, {pinyin_list}"
-                )
+                logging.warning(f"拼音索引异常: 声母={idx_initial}, 韵母={idx_final}, {pinyin_list}")
                 valid = False
 
         return pinyin_list, valid

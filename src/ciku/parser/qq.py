@@ -54,7 +54,7 @@ class QQV1Parser(BaseParser):
     def parse(self, file_path: Path | str) -> bool:
         self.dict_cell = None
         file_path = Path(file_path)
-        data = self.read_data(file_path)
+        data = self._read_data(file_path)
         if not self.check(data):
             return False
         struct = self.struct
@@ -110,7 +110,7 @@ class QQV1Parser(BaseParser):
             pos += step
             word_index2 = word_index + pinyin_len
             if word_index2 + word_len > len(word_data):
-                logging.warning("Out of word bound")
+                logging.warning("词语索引异常越界")
                 break
 
             pinyin_data = word_data[word_index:word_index2]
@@ -120,7 +120,7 @@ class QQV1Parser(BaseParser):
             entry = WordEntry(word, pinyin_list, weight, is_error=is_error)
             word_list.append(entry)
 
-        logging.info(f"word list = {len(word_list)}")
+        logging.debug(f"word list = {len(word_list)}")
         return word_list
 
     def decompress_data(self, data: bytes) -> bytes:
@@ -128,6 +128,6 @@ class QQV1Parser(BaseParser):
         try:
             word_data = zlib.decompress(compressed_data)
         except zlib.error as e:
-            logging.error("Error zlib data", e)  # TODO
+            logging.error(f"zlib解压失败 {e}")  # TODO
             raise
         return word_data

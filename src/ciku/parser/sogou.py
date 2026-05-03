@@ -40,10 +40,7 @@ from ..core.utils import byte2str, byte2uint
 def _check_extra_word(data: bytes, pos: int, step: int, encoding: str) -> int:
     word = "DELTBL"
     code_len = len(word) * step
-    if (
-        pos + code_len <= len(data)
-        and byte2str(data[pos : pos + code_len], encoding, False) == word
-    ):
+    if pos + code_len <= len(data) and byte2str(data[pos : pos + code_len], encoding, False) == word:
         return code_len
     return 0
 
@@ -79,7 +76,7 @@ class SogouParser(BaseParser):
         self.dict_cell = None
         file_path = Path(file_path)
         self.current_file = file_path.as_posix()
-        data = self.read_data(file_path)
+        data = self._read_data(file_path)
         if not self.check(data):
             return False
 
@@ -97,7 +94,7 @@ class SogouParser(BaseParser):
 
     def check(self, data: bytes | None) -> bool:
         if data and data[:1] != b"@":
-            logging.error(f"文件前缀格式不符合: {self.current_file}")
+            logging.error(f" {self.current_file} 文件格式不符{self.suffix}规范")
             return False
         return super().check(data)
 
@@ -129,7 +126,7 @@ class SogouParser(BaseParser):
         has_extra = data.find(extra_flag)
         extra_data = b""
         if has_extra >= 0:
-            logging.warning("Hit extra_flag")
+            logging.warning("存在额外词库列表")
             extra_data = data[has_extra + len(extra_flag) :]
             word_data = data[:has_extra]
 
@@ -184,7 +181,7 @@ class SogouParser(BaseParser):
 
         extra_word_list = self.extract_extra_words(extra_data) if allow_error else []
         if extra_word_list:
-            logging.warning(f"Extra word list = {len(extra_word_list)}")
+            logging.warning(f"额外词库列表 = {len(extra_word_list)}")
             word_list += extra_word_list
 
         return word_list
@@ -227,15 +224,13 @@ class SogouParser(BaseParser):
             if pos > len(pinyin_data):
                 break
         if len(pinyin_dict) != pinyin_len:
-            logging.warning(f"Mismatch pinyin len = {len(pinyin_dict)}/{pinyin_len}")
+            logging.warning(f"拼音映射表不一致 {len(pinyin_dict)}/{pinyin_len}")
 
         # 拼音表结束位置（词表开始，默认固定值部分文件可能有问题）
         pos_end = struct.code_map.start + pos
         return pinyin_dict, pos_end
 
-    def _decode_pinyin(
-        self, pinyin_data: bytes, pos: int, step: int, is_strip: bool = True
-    ) -> tuple[int, str, int]:
+    def _decode_pinyin(self, pinyin_data: bytes, pos: int, step: int, is_strip: bool = True) -> tuple[int, str, int]:
         encoding = self.encoding
         py_index = byte2uint(pinyin_data[pos : pos + step])
         py_len = byte2uint(pinyin_data[pos + step : pos + step * 2])

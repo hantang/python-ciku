@@ -24,9 +24,7 @@ def show_progress(iterable, prefix="", suffix="", length=50, file=sys.stderr):
         bar = "█" * filled + " " * (length - filled)
         eta = (elapsed / (i + 1)) * (count - i - 1) if i > 0 else 0
         print(
-            f"\r{prefix} |{bar}| {i + 1}/{count} "
-            f"[{format_time(elapsed)}<{format_time(eta)}, "
-            f"{percent:.1%}] {suffix}",
+            f"\r{prefix} |{bar}| {i + 1}/{count} [{format_time(elapsed)}<{format_time(eta)}, {percent:.1%}] {suffix}",
             end="",
             file=file,
             flush=True,
@@ -89,7 +87,7 @@ class ParserToolkit:
     def process(self, file_path: Path, save_file: Path, keep_error: bool) -> bool:
         parser = self.get_parser(file_path)
         if parser.parse(file_path):
-            return parser.save_data(save_file, keep_error)
+            return parser.save_data(save_file, keep_error=keep_error)
         return False
 
     def get_parser(self, file_path: Path) -> BaseParser:

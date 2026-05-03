@@ -70,7 +70,7 @@ class BaiduParser(BaseParser):
         self.dict_cell = None
         file_path = Path(file_path)
         self.current_file = file_path.as_posix()
-        data = self.read_data(file_path)
+        data = self._read_data(file_path)
         if not self.check(data):
             return False
 
@@ -88,7 +88,7 @@ class BaiduParser(BaseParser):
 
     def check(self, data: bytes | None) -> bool:
         if data and data[:8] != b"biptbdsw":
-            logging.error(f"文件前缀格式不符合: {self.current_file}")
+            logging.error(f" {self.current_file} 文件格式不符{self.suffix}规范")
             return False
         return super().check(data)
 
@@ -165,18 +165,14 @@ class BaiduParser(BaseParser):
                 pos += word_len * 2
                 pinyin_list = self._parse_pinyin(data_pinyin)
                 word = self._decode_data(data_word)
-                if (
-                    len(word) > 100
-                    or len(word) * 5 <= len(pinyin_list)
-                    or len(word) > len(pinyin_list)
-                ):
+                if len(word) > 100 or len(word) * 5 <= len(pinyin_list) or len(word) > len(pinyin_list):
                     is_error = True
 
             is_error = is_error or (not word) or self._check_pinyin(pinyin_list)
             entry = WordEntry(word, pinyin_list, weight, is_error=is_error)  # TODO is_error
             word_list.append(entry)  # 每行：词语 拼音 词频（或权重）
 
-        logging.info(f"word list = {len(word_list)}")
+        logging.debug(f"共抽取词库列表 {len(word_list)}")
         return word_list
 
     def _parse_pinyin(self, data_pinyin: bytes) -> list[str]:
