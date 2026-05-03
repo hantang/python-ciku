@@ -33,7 +33,7 @@ class BaseParser(ABC):
 
     def check(self, data: bytes | None) -> bool:
         if not data:
-            logging.error("文件无数据")
+            logging.error("文件数据为空")
             return False
         return True
 
@@ -48,43 +48,73 @@ class BaseParser(ABC):
     def read_data(self, file_path: Path | str) -> bytes:
         file = Path(file_path)
         if not file.exists():
-            raise FileExistsError(f"{file} does not exits")
-        if file.suffix[1:] != self.suffix:
-            logging.warning(f"Error suffix = {file.suffix}, expect = {self.suffix}")
+            raise FileExistsError(f"文件 {file} 不存在")
+
+        if file.suffix.lstrip(".").lower() != self.suffix:
+            logging.warning(f"后缀不匹配，当前文件后缀 {file.suffix.lower()}, 期望后缀 .{self.suffix}")
 
         with open(file, "rb") as f:
             return f.read()
 
-    def save_data(self, save_file: Path | str, keep_error: bool = False) -> bool:
+    def save_data(
+        self,
+        save_file: Path | str,
+        keep_error: bool = False,
+        meta_comment: str = "#",
+        meta_sep: str = " ",
+        meta_key_sep: str = ":",
+        meta_example_sep: str = "、",
+        keep_all_meta: bool = False,
+        keep_filename: bool = False,
+        field_sep: str = "\t",
+        code_sep: str = " ",
+        word_first: bool = True,
+        keep_weight: bool = True,
+    ) -> bool:
         if self.dict_cell is None:
-            logging.warning("Dict cell data is None")
+            logging.warning("解析词库列表为空")
             return False
 
         save_file = Path(save_file)
         logging.debug(f"Save to file {save_file}")
         create_dir(save_file)
 
-        meta = self.dict_cell.metadata.to_str()
+        metadata = self.dict_cell.metadata
         words = self.dict_cell.words
+        valid_words = [word for word in words if keep_error or not word.is_error]
+        logging.debug(f"valid words = {len(valid_words)}")
+
+        meta_str = metadata.to_str(
+            comment=meta_comment,
+            separator=meta_sep,
+            key_sep=meta_key_sep,
+            example_sep=meta_example_sep,
+            keep_all=keep_all_meta,
+            keep_filename=keep_filename,
+        )
+
+        word_data = [
+            word.to_str(field_sep=field_sep, code_sep=code_sep, word_first=word_first, keep_weight=keep_weight)
+            for word in valid_words
+        ]
+        out_text = "\n".join([meta_str, ""] + word_data)
 
         with open(save_file, "w", encoding="utf-8") as f:
-            f.write(meta + "\n\n")
-
-            for word in words:
-                if not keep_error and word.is_error:
-                    continue
-                f.write(word.to_str() + "\n")
+            f.write(out_text)
 
         logging.debug("Save done.")
         return True
 
     def export_data(self, keep_error: bool = False) -> dict[str, list[str]]:
+        """导出数据，meta和词库列表"""
         if self.dict_cell is None:
             logging.warning("Dict cell data is None")
             return {"meta": [], "words": []}
 
         meta_list = self.dict_cell.metadata.to_list()
         word_list = [w.to_str() for w in self.dict_cell.words if keep_error or not w.is_error]
+        logging.debug(f"words = {len(word_list)}")
+
         result = {"meta": meta_list, "words": word_list}
         return result
 
@@ -101,13 +131,10 @@ class BaseParser(ABC):
         return byte2str(encode_data, encoding, is_strip)
 
     def _check_pinyin(self, pinyin_list: list[str], allow_en: bool = True) -> bool:
-        """
-        判断拼音需要是否有效
+        """判断拼音需要是否有效
         allow_en允许单个英文字母
         """
-        return not all(
-            [py in self.pinyin_syllables or (allow_en and py in self.letters) for py in pinyin_list]
-        )
+        return not all([py in self.pinyin_syllables or (allow_en and py in self.letters) for py in pinyin_list])
 
 
 class BaseConverter(ABC):
