@@ -1,11 +1,11 @@
-# IME-Utils
+# Ciku (IME-Utils)
 
 <div align="center">
 
-![GitHub stars](https://img.shields.io/github/stars/hantang/ime-utils?style=flat-square)
-![GitHub release](https://img.shields.io/github/v/release/hantang/ime-utils?style=flat-square)
-![GitHub repo size](https://img.shields.io/github/repo-size/hantang/ime-utils?style=flat-square)
-![GitHub license](https://img.shields.io/github/license/hantang/ime-utils?style=flat-square)
+![GitHub stars](https://img.shields.io/github/stars/hantang/python-ciku?style=flat-square)
+![GitHub release](https://img.shields.io/github/v/release/hantang/python-ciku?style=flat-square)
+![GitHub repo size](https://img.shields.io/github/repo-size/hantang/python-ciku?style=flat-square)
+![GitHub license](https://img.shields.io/github/license/hantang/python-ciku?style=flat-square)
 
 </div>
 
@@ -26,7 +26,7 @@
 
 ```python
 # 安装
-# pip install ime-utils
+# pip install ciku # ime-utils
 # uv pip install . # 本地
 
 # 用例：
@@ -52,9 +52,9 @@ for file in files:
 # 或者 python -m ime_utils -f file-names -o output
 
 # 指定多个文件
-ime-utils -f file-name1,file-name2 -o output
+ciku -f file-name1,file-name2 -o output
 # 指定目录，-e保留解析异常词语, -r 目录递归检索文件
-ime-utils -d file-dir -o text -e -r
+ciku -d file-dir -o text -e -r
 ```
 
 ## 开发

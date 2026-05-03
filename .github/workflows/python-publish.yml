@@ -72,7 +72,7 @@ jobs:
 
     environment:
       name: pypi
-      url: https://pypi.org/project/ime-utils
+      url: https://pypi.org/project/ciku
 
     steps:
       - name: Retrieve release distributions

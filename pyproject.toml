@@ -1,21 +1,21 @@
 [project]
-name = "ime-utils"
-version = "0.2.4"
-description = "Chinese IME ciku (aka cell wordlist file) parsing tool"
+name = "ciku"
+version = "0.3.0"
+description = "Chinese IME ciku (aka word list / lexicon file) parsing tool"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
 dependencies = []
 
 [project.urls]
-Homepage = "https://github.com/hantang/ime-utils"
-Documentation = "https://github.com/hantang/ime-utils"
-Repository = "https://github.com/hantang/ime-utils.git"
-Issues = "https://github.com/hantang/ime-utils/issues"
-Changelog = "https://github.com/hantang/ime-utils/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/hantang/python-ciku"
+Documentation = "https://github.com/hantang/python-ciku"
+Repository = "https://github.com/hantang/python-ciku.git"
+Issues = "https://github.com/hantang/python-ciku/issues"
+Changelog = "https://github.com/hantang/python-ciku/blob/main/CHANGELOG.md"
 
 [project.scripts]
-ime-utils = "ime_utils.cli:main"
+ciku = "ciku.cli:main"
 
 [dependency-groups]
 dev = [

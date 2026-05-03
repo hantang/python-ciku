@@ -32,9 +32,9 @@
 import logging
 from pathlib import Path
 
-from ime_utils.core.base import BaseParser
-from ime_utils.core.models import DictCell, DictField, DictMeta, DictStruct, WordEntry
-from ime_utils.core.utils import byte2str, byte2uint
+from ..core.base import BaseParser
+from ..core.models import DictCell, DictField, DictMeta, DictStruct, WordEntry
+from ..core.utils import byte2str, byte2uint
 
 
 def _check_extra_word(data: bytes, pos: int, step: int, encoding: str) -> int:

@@ -4,7 +4,7 @@ import time
 from pathlib import Path
 from typing import Type
 
-from ime_utils.core.base import BaseParser
+from .core.base import BaseParser
 
 
 def show_progress(iterable, prefix="", suffix="", length=50, file=sys.stderr):
@@ -66,7 +66,7 @@ class ParserToolkit:
 
     def _register_parsers(self):
         # 动态导入并注册所有解析器
-        from ime_utils import (
+        from ciku import (
             BaiduMobileParser,
             BaiduParser,
             HuayuParser,

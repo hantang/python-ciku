@@ -30,11 +30,11 @@ import logging
 import re
 from pathlib import Path
 
-from ime_utils.core.base import BaseParser
-from ime_utils.core.models import DictCell, DictField, DictMeta, DictStruct, WordEntry
-from ime_utils.core.utils import byte2uint
-from ime_utils.pinyin.baidu import BAIDU_PINYIN_FINALS as PINYIN_FINALS
-from ime_utils.pinyin.baidu import BAIDU_PINYIN_INITIALS as PINYIN_INITIALS
+from ..core.base import BaseParser
+from ..core.models import DictCell, DictField, DictMeta, DictStruct, WordEntry
+from ..core.utils import byte2uint
+from ..pinyin.baidu import BAIDU_PINYIN_FINALS as PINYIN_FINALS
+from ..pinyin.baidu import BAIDU_PINYIN_INITIALS as PINYIN_INITIALS
 
 
 class BaiduDictStruct(DictStruct):

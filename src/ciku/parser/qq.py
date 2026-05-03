@@ -30,9 +30,9 @@ import logging
 import zlib
 from pathlib import Path
 
-from ime_utils.core.base import BaseParser
-from ime_utils.core.models import DictCell, DictField, DictMeta, DictStruct, WordEntry
-from ime_utils.core.utils import byte2uint
+from ..core.base import BaseParser
+from ..core.models import DictCell, DictField, DictMeta, DictStruct, WordEntry
+from ..core.utils import byte2uint
 
 from .sogou import SogouParser
 
