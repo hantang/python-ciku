@@ -1,14 +1,14 @@
 import argparse
 import sys
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import Type
+from typing import TextIO, Type
 
 from .core.base import BaseParser
 
 
-def show_progress(iterable, prefix="", suffix="", length=50, file=sys.stderr):
+def show_progress(iterable, prefix: str = "", suffix: str = "", length: int = 50, file: TextIO | None = sys.stderr):
     """A simple progress bar for iterables"""
     count = len(iterable)
     start = time.time()
@@ -24,12 +24,8 @@ def show_progress(iterable, prefix="", suffix="", length=50, file=sys.stderr):
         filled = int(length * percent)
         bar = "█" * filled + " " * (length - filled)
         eta = (elapsed / (i + 1)) * (count - i - 1) if i > 0 else 0
-        print(
-            f"\r{prefix} |{bar}| {i + 1}/{count} [{format_time(elapsed)}<{format_time(eta)}, {percent:.1%}] {suffix}",
-            end="",
-            file=file,
-            flush=True,
-        )
+        info = f"\r{prefix} |{bar}| {i + 1}/{count} [{format_time(elapsed)}<{format_time(eta)}, {percent:.1%}] {suffix}"
+        print(info, end="", file=file, flush=True)
     print(file=file)  # New line after completion
 
 
@@ -106,7 +102,7 @@ def run_parallel(todo_files: list[tuple], toolkit: ParserToolkit, keep_error: bo
             for suffix, data_file, save_file in todo_files
         }
         stats: dict[str, int] = {}
-        for future in as_completed(futures):
+        for future in show_progress(futures.keys(), prefix=f"正在处理（并发度={max_workers}）", suffix="进度"):
             suffix = futures[future]
             if suffix not in stats:
                 stats[suffix] = 0
@@ -153,8 +149,11 @@ def process(
                 file_groups[suffix] = []
                 file_ignores[suffix] = 0
 
-            data_file = data_file.relative_to(input_dir)
-            save_file = Path(output_dir, data_file).with_suffix(save_suffix)
+            if input_dir:
+                data_path = data_file.relative_to(input_dir)
+            else:
+                data_path = Path(data_file.name)
+            save_file = Path(output_dir, data_path).with_suffix(save_suffix)
             if not overwrite and save_file.exists():
                 file_ignores[suffix] += 1
             else:
@@ -164,7 +163,8 @@ def process(
     file_details = ", ".join([f"{k}: {len(v)}" for k, v in file_groups.items()])
     ignore_count = sum(file_ignores.values())
     ignore_details = ", ".join([f"{k}: {v}" for k, v in file_ignores.items()])
-    print(f"待处理文件共 = {len(file_items)}，有效词库文件共 = {file_count} （{file_details}）")
+    print(f"发现词库文件共 {len(file_items)}")
+    print(f"需要处理词库文件 {file_count} （{file_details}）")
     print(f"忽略已存在文件 {ignore_count} （{ignore_details}）")
 
     if file_count == 0:
@@ -175,6 +175,7 @@ def process(
     print("\n开始处理……")
 
     stats: dict[str, int] = {}
+    start_time = time.time()
     if workers == 1:
         for suffix, file_list in file_groups.items():
             print(f"\n==> 正在处理：词库 = {suffix}")
@@ -184,14 +185,23 @@ def process(
                     stats[suffix] += 1
     else:
         all_files = [(k, f1, f2) for k, file_list in file_groups.items() for f1, f2 in file_list]
+        print("\n==> 正在处理：所有词库")
         stats = run_parallel(all_files, toolkit, keep_error, workers)
 
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    if elapsed_time > 60:
+        minutes, seconds = elapsed_time // 60, elapsed_time % 60
+        time_log = f"处理时间共: {minutes:02d}: {seconds:.2f}"
+    else:
+        time_log = f"处理时间共: {elapsed_time:.2f}秒"
+
     result = "\n".join(
-        ["文件类型\t总数 / 成功 / 忽略", "-" * 40]
+        ["文件类型\t总数 / 成功", "-" * 40]
         + [f"文件（{suffix}）\t{len(file_list):4d} / {stats[suffix]:4d}" for suffix, file_list in file_groups.items()]
         + ["=" * 40, f"结果合计\t{file_count:4d} / {sum(stats.values()):4d}"]
     )
-    print(f"\n【处理完成】\n\n{result}\n")
+    print(f"\n【处理完成】\n\n{time_log}\n\n{result}\n")
 
 
 def main() -> int:
@@ -200,12 +210,18 @@ def main() -> int:
     parser.add_argument("-d", "--dir", type=str, default=None, help="词库目录路径")
     parser.add_argument("-o", "--out", type=str, default=".", help="保存目录路径")
     parser.add_argument("-w", "--workers", type=int, default=1, help="并发处理数")
-    parser.add_argument("-e", "--keep-error", action="store_true", help="保留解析异常词语")
+    parser.add_argument("--keep-error", action="store_true", help="保留解析异常词语")
     parser.add_argument("--recursive", action="store_true", help="词库目录递归检索文件")
     parser.add_argument("--overwrite", action="store_true", help="保存时覆盖已经已存在文件")
+    parser.add_argument("--version", action="store_true", help="输出版本信息")
 
     args = parser.parse_args()
     # print(f"args = {args}")
+    if args.version:
+        from ciku import __version__
+
+        print(f"当前版本 = {__version__}")
+        return 0
 
     if not args.file and not args.dir:
         parser.print_help()
