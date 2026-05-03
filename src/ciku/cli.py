@@ -1,6 +1,7 @@
 import argparse
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Type
 
@@ -98,72 +99,97 @@ class ParserToolkit:
         return self.factory.get_suffixes()
 
 
+def run_parallel(todo_files: list[tuple], toolkit: ParserToolkit, keep_error: bool, max_workers: int) -> dict[str, int]:
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = {
+            executor.submit(toolkit.process, data_file, save_file, keep_error): suffix
+            for suffix, data_file, save_file in todo_files
+        }
+        stats: dict[str, int] = {}
+        for future in as_completed(futures):
+            suffix = futures[future]
+            if suffix not in stats:
+                stats[suffix] = 0
+            if future.result():
+                stats[suffix] += 1
+        return stats
+
+
 def process(
     file_names: str,
     input_dir: str,
     output_dir: str,
+    *,
+    workers: int,
     keep_error: bool,
     is_recursive: bool,
+    overwrite: bool,
 ) -> None:
+    save_suffix = ".txt"
     toolkit = ParserToolkit()
-    file_list: list[Path] = []
+    suffixes = toolkit.suffixes
+
+    file_items: list[Path] = []
+    file_groups: dict[str, list[tuple[Path, Path]]] = {}
+
     if file_names:
         for name in file_names.split(","):
-            file_list.append(Path(name.strip()))
+            file_items.append(Path(name.strip()))
     if input_dir:
         if is_recursive:
-            file_list += Path(input_dir).rglob("*.*")
+            file_items += Path(input_dir).rglob("*.*")
         else:
-            file_list += Path(input_dir).glob("*.*")
+            file_items += Path(input_dir).glob("*.*")
+
+    print(f"共发现文件 {len(file_items)}")
 
     # 过滤
-    suffixes = toolkit.suffixes
-    groups: dict[str, list[Path]] = {}
-    for file_name in file_list:
-        suffix = file_name.suffix
+    file_ignores: dict[str, int] = {}
+    for data_file in file_items:
+        suffix = data_file.suffix
         suffix = suffix.lstrip(".").lower()
-        if file_name.exists() and suffix in suffixes:
-            if suffix not in groups:
-                groups[suffix] = []
-            groups[suffix].append(file_name)
+        if data_file.exists() and suffix in suffixes:
+            if suffix not in file_groups:
+                file_groups[suffix] = []
+                file_ignores[suffix] = 0
 
-    file_count = sum(map(len, groups.values()))
-    file_suffixes = ", ".join(list(groups.keys()))
-    print(f"待处理文件共 = {len(file_list)}，有效词库文件共 = {file_count} （{file_suffixes}）")
+            data_file = data_file.relative_to(input_dir)
+            save_file = Path(output_dir, data_file).with_suffix(save_suffix)
+            if not overwrite and save_file.exists():
+                file_ignores[suffix] += 1
+            else:
+                file_groups[suffix].append((data_file, save_file))
+
+    file_count = sum(map(len, file_groups.values()))
+    file_details = ", ".join([f"{k}: {len(v)}" for k, v in file_groups.items()])
+    ignore_count = sum(file_ignores.values())
+    ignore_details = ", ".join([f"{k}: {v}" for k, v in file_ignores.items()])
+    print(f"待处理文件共 = {len(file_items)}，有效词库文件共 = {file_count} （{file_details}）")
+    print(f"忽略已存在文件 {ignore_count} （{ignore_details}）")
+
     if file_count == 0:
-        print("文件不存在或者后缀格式不支持，请尝试其他文件")
+        print("没有待处理文件或者后缀格式不支持，请尝试其他文件")
         return
+
     print(f"解析文件将保存到 {output_dir}")
     print("\n开始处理……")
 
-    stats = {}
-    ignores = {}
-    for suffix, file_list in groups.items():
-        print(f"\n==> 正在处理：词库 = {suffix}")
-        stats[suffix] = 0
-        ignores[suffix] = 0
-        for file_name in show_progress(file_list, f"处理 {suffix:5}", "进度"):
-            save_file = Path(output_dir, f"{file_name.stem}.txt")
-            if save_file.exists():
-                # print(f"忽略文件：{file}, 输出文件已存在")
-                ignores[suffix] += 1
-                continue
-            if toolkit.process(file_name, save_file, keep_error):
-                stats[suffix] += 1
+    stats: dict[str, int] = {}
+    if workers == 1:
+        for suffix, file_list in file_groups.items():
+            print(f"\n==> 正在处理：词库 = {suffix}")
+            stats[suffix] = 0
+            for data_file, save_file in show_progress(file_list, f"处理 {suffix:5}", "进度"):
+                if toolkit.process(data_file, save_file, keep_error):
+                    stats[suffix] += 1
+    else:
+        all_files = [(k, f1, f2) for k, file_list in file_groups.items() for f1, f2 in file_list]
+        stats = run_parallel(all_files, toolkit, keep_error, workers)
 
     result = "\n".join(
-        [
-            "文件类型\t总数 / 成功 / 忽略",
-            "-" * 40,
-        ]
-        + [
-            f"文件（{suffix}）\t{len(file_list):4d} / {stats[suffix]:4d} / {ignores[suffix]:4d}"
-            for suffix, file_list in groups.items()
-        ]
-        + [
-            "=" * 40,
-            f"结果合计\t{file_count:4d} / {sum(stats.values()):4d} / {sum(ignores.values()):4d}",
-        ]
+        ["文件类型\t总数 / 成功 / 忽略", "-" * 40]
+        + [f"文件（{suffix}）\t{len(file_list):4d} / {stats[suffix]:4d}" for suffix, file_list in file_groups.items()]
+        + ["=" * 40, f"结果合计\t{file_count:4d} / {sum(stats.values()):4d}"]
     )
     print(f"\n【处理完成】\n\n{result}\n")
 
@@ -173,8 +199,10 @@ def main() -> int:
     parser.add_argument("-f", "--file", type=str, default=None, help="词库文件（逗号分隔多个文件）")
     parser.add_argument("-d", "--dir", type=str, default=None, help="词库目录路径")
     parser.add_argument("-o", "--out", type=str, default=".", help="保存目录路径")
-    parser.add_argument("-r", "--recursive", action="store_true", help="词库目录递归检索文件")
+    parser.add_argument("-w", "--workers", type=int, default=1, help="并发处理数")
     parser.add_argument("-e", "--keep-error", action="store_true", help="保留解析异常词语")
+    parser.add_argument("--recursive", action="store_true", help="词库目录递归检索文件")
+    parser.add_argument("--overwrite", action="store_true", help="保存时覆盖已经已存在文件")
 
     args = parser.parse_args()
     # print(f"args = {args}")
@@ -184,7 +212,15 @@ def main() -> int:
         print("\n 请配置 -f 指定词库文件，或 -d 指定词库目录")
         return 1
 
-    process(args.file, args.dir, args.out, args.keep_error, args.recursive)
+    process(
+        args.file,
+        args.dir,
+        args.out,
+        workers=args.workers,
+        keep_error=args.keep_error,
+        is_recursive=args.recursive,
+        overwrite=args.overwrite,
+    )
     return 0
 
 
