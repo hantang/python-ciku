@@ -1,6 +1,6 @@
 [project]
 name = "ciku"
-version = "0.3.1"
+version = "0.3.2"
 description = "Chinese IME ciku (aka word list / lexicon file) parsing tool"
 readme = "README.md"
 authors = [
