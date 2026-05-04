@@ -83,8 +83,11 @@ class ParserToolkit:
 
     def process(self, file_path: Path, save_file: Path, keep_error: bool) -> bool:
         parser = self.get_parser(file_path)
-        if parser.parse(file_path):
-            return parser.save_data(save_file, keep_error=keep_error)
+        try:
+            if parser.parse(file_path):
+                return parser.save_data(save_file, keep_error=keep_error)
+        except Exception as e:
+            print(f"解析异常: {file_path}\n\t{e}")
         return False
 
     def get_parser(self, file_path: Path) -> BaseParser:
@@ -191,10 +194,10 @@ def process(
     end_time = time.time()
     elapsed_time = end_time - start_time
     if elapsed_time > 60:
-        minutes, seconds = elapsed_time // 60, elapsed_time % 60
-        time_log = f"处理时间共: {minutes:02d}: {seconds:.2f}"
+        minutes, seconds = int(elapsed_time // 60), elapsed_time % 60
+        time_log = f"处理时间共: {minutes:02d}分{seconds:.2f}秒"
     else:
-        time_log = f"处理时间共: {elapsed_time:.2f}秒"
+        time_log = f"处理时间共: {elapsed_time:.4f}秒"
 
     result = "\n".join(
         ["文件类型\t总数 / 成功", "-" * 40]
@@ -238,7 +241,3 @@ def main() -> int:
         overwrite=args.overwrite,
     )
     return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())
