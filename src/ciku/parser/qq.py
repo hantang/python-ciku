@@ -77,10 +77,14 @@ class QQV1Parser(BaseParser):
         offset_word = self.offset_word
         count = self.count
         data_info = self._decode_text(data[struct.description.start : offset_word], None)
-        data_info_dict = dict([v.strip().split(": ", 1) for v in data_info.split("\r\n") if v.strip()])
+        logging.debug(f"data info = \n{data_info}")
+
+        data_entries = [val for line in data_info.split("\r\n") if (val := line.strip())]
+        data_pairs = [val.split(":", 1) for val in data_entries]
+        data_info_dict = {pair[0]: pair[1].lstrip() for pair in data_pairs if len(pair) == 2}
 
         name = data_info_dict.get("Name", "")
-        category = " ".join([data_info_dict.get("Type", ""), data_info_dict.get("FirstType", "")])
+        category = " ".join([data_info_dict.get(cate_key, "") for cate_key in ["Type", "FirstType"]]).strip()
         description = data_info_dict.get("Intro", "")
         examples = data_info_dict.get("Example", "").split()
         metadata = DictMeta(
