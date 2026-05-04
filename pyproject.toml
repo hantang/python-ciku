@@ -21,10 +21,7 @@ Changelog = "https://github.com/hantang/python-ciku/blob/main/CHANGELOG.md"
 ciku = "ciku.cli:main"
 
 [dependency-groups]
-dev = [
-    "mypy>=1.17.1",
-    "ruff>=0.12.11",
-]
+dev = []
 
 [build-system]
 requires = ["uv_build>=0.11.6,<0.12.0"]
