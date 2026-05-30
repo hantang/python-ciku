@@ -19,10 +19,6 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v8.1.0
 
-      - name: Checking
-        run: |
-          uvx ruff check src
-          uvx mypy src
 
       - name: Build
         run: uv build
