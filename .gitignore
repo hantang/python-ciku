@@ -36,3 +36,5 @@ todo/
 trash/
 .*_cache/
 .python-version
+data/
+demo/

@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TextIO, Type
 
-from .core.base import BaseParser
+from ciku.core.base import BaseParser
 
 
 @dataclass
@@ -236,9 +236,9 @@ def main() -> int:
     parser.add_argument("-d", "--dir", type=str, default=None, help="词库目录路径")
     parser.add_argument("-o", "--out", type=str, default=".", help="保存目录路径")
     parser.add_argument("-w", "--workers", type=positive_int, default=1, help="并发处理数")
-    parser.add_argument("--keep-error", action="store_true", help="保留解析异常词语")
-    parser.add_argument("--recursive", action="store_true", help="词库目录递归检索文件")
-    parser.add_argument("--overwrite", action="store_true", help="保存时覆盖已经已存在文件")
+    parser.add_argument("-e", "--keep-error", action="store_true", help="保留解析异常词语")
+    parser.add_argument("-r", "--recursive", action="store_true", help="词库目录递归检索文件")
+    parser.add_argument("--force", action="store_true", help="保存时覆盖已经已存在文件")
     parser.add_argument("--version", action="store_true", help="输出版本信息")
 
     args = parser.parse_args()

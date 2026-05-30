@@ -53,7 +53,7 @@ for file in files:
 
 # 指定多个文件
 ciku -f file-name1,file-name2 -o output
-# 指定目录，-e保留解析异常词语, -r 目录递归检索文件
+# 指定目录，-e / --keep-error 保留解析异常词语, -r / --recursive 目录递归检索文件
 ciku -d file-dir -o text -e -r
 ```
 
