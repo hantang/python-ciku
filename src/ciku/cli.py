@@ -2,10 +2,31 @@ import argparse
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TextIO, Type
 
 from .core.base import BaseParser
+
+
+@dataclass
+class ProcessSummary:
+    discovered: int = 0
+    queued: int = 0
+    ignored: int = 0
+    succeeded: int = 0
+    failed: int = 0
+    by_suffix: dict[str, int] = field(default_factory=dict)
+
+
+def positive_int(value: str) -> int:
+    try:
+        parsed = int(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("必须是正整数") from exc
+    if parsed < 1:
+        raise argparse.ArgumentTypeError("必须是正整数")
+    return parsed
 
 
 def show_progress(iterable, prefix: str = "", suffix: str = "", length: int = 50, file: TextIO | None = sys.stderr):
@@ -115,15 +136,15 @@ def run_parallel(todo_files: list[tuple], toolkit: ParserToolkit, keep_error: bo
 
 
 def process(
-    file_names: str,
-    input_dir: str,
+    file_names: str | None,
+    input_dir: str | None,
     output_dir: str,
     *,
     workers: int,
     keep_error: bool,
     is_recursive: bool,
     overwrite: bool,
-) -> None:
+) -> ProcessSummary:
     save_suffix = ".txt"
     toolkit = ParserToolkit()
     suffixes = toolkit.suffixes
@@ -172,7 +193,14 @@ def process(
 
     if file_count == 0:
         print("没有待处理文件或者后缀格式不支持，请尝试其他文件")
-        return
+        return ProcessSummary(
+            discovered=len(file_items),
+            queued=0,
+            ignored=ignore_count,
+            succeeded=0,
+            failed=0,
+            by_suffix={},
+        )
 
     print(f"解析文件将保存到 {output_dir}")
     print("\n开始处理……")
@@ -205,6 +233,15 @@ def process(
         + ["=" * 40, f"结果合计\t{file_count:4d} / {sum(stats.values()):4d}"]
     )
     print(f"\n【处理完成】\n\n{time_log}\n\n{result}\n")
+    success_count = sum(stats.values())
+    return ProcessSummary(
+        discovered=len(file_items),
+        queued=file_count,
+        ignored=ignore_count,
+        succeeded=success_count,
+        failed=file_count - success_count,
+        by_suffix=stats,
+    )
 
 
 def main() -> int:
@@ -212,7 +249,7 @@ def main() -> int:
     parser.add_argument("-f", "--file", type=str, default=None, help="词库文件（逗号分隔多个文件）")
     parser.add_argument("-d", "--dir", type=str, default=None, help="词库目录路径")
     parser.add_argument("-o", "--out", type=str, default=".", help="保存目录路径")
-    parser.add_argument("-w", "--workers", type=int, default=1, help="并发处理数")
+    parser.add_argument("-w", "--workers", type=positive_int, default=1, help="并发处理数")
     parser.add_argument("--keep-error", action="store_true", help="保留解析异常词语")
     parser.add_argument("--recursive", action="store_true", help="词库目录递归检索文件")
     parser.add_argument("--overwrite", action="store_true", help="保存时覆盖已经已存在文件")
@@ -230,6 +267,9 @@ def main() -> int:
         parser.print_help()
         print("\n 请配置 -f 指定词库文件，或 -d 指定词库目录")
         return 1
+
+    if args.dir and not Path(args.dir).is_dir():
+        parser.error(f"词库目录不存在: {args.dir}")
 
     process(
         args.file,

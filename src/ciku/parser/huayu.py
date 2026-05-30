@@ -197,8 +197,12 @@ class HuayuParser(BaseParser):
 
         seg_index = byte2uint(data[:block_len])
         max_len = byte2uint(data[header_len - block_len : header_len])
-        assert max_len > 0
-        assert header_len + max_len <= len(data)
+        if max_len <= 0:
+            logging.warning("词库文件解析，分段长度为空")
+            return []
+        if header_len + max_len > len(data):
+            logging.warning("词库文件解析，分段长度越界")
+            return []
         word_part = data[header_len : header_len + max_len]
         if index != seg_index:
             logging.warning("词库文件解析，分段索引不匹配")
@@ -236,7 +240,7 @@ class HuayuParser(BaseParser):
             if word is None:
                 continue
 
-            is_error = self._check_pinyin(pinyin_list) or not valid
+            is_error = self._has_invalid_pinyin(pinyin_list) or not valid
             entry = WordEntry(word, pinyin_list, weight, is_error=is_error)
             word_list.append(entry)
         return word_list

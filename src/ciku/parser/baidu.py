@@ -126,7 +126,7 @@ class BaiduParser(BaseParser):
 
             if word_len == 0:
                 word, pinyin_list, pos = self._parse_special(word_data, pos)
-                is_error = not word or self._check_pinyin(pinyin_list) or len(word) != pinyin_list
+                is_error = not word or self._has_invalid_pinyin(pinyin_list) or len(word) != len(pinyin_list)
                 entry = WordEntry(word, pinyin_list, weight, is_error=is_error)
                 word_list.append(entry)  # 备注
                 continue
@@ -168,7 +168,7 @@ class BaiduParser(BaseParser):
                 if len(word) > 100 or len(word) * 5 <= len(pinyin_list) or len(word) > len(pinyin_list):
                     is_error = True
 
-            is_error = is_error or (not word) or self._check_pinyin(pinyin_list)
+            is_error = is_error or (not word) or self._has_invalid_pinyin(pinyin_list)
             entry = WordEntry(word, pinyin_list, weight, is_error=is_error)  # TODO is_error
             word_list.append(entry)  # 每行：词语 拼音 词频（或权重）
 
@@ -195,8 +195,7 @@ class BaiduParser(BaseParser):
                 try:
                     value = self._decode_data(data_pinyin[i : i + step])
                 except UnicodeDecodeError:
-                    # continue
-                    pass
+                    value = "?"
                 pinyin_list.append(value)
 
         return pinyin_list

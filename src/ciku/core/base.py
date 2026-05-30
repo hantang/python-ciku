@@ -27,6 +27,11 @@ class BaseParser(ABC):
     pinyin_syllables: set[str] = set(PINYIN_SYLLABLES)
     letters: set[str] = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
+    def __init__(self) -> None:
+        self.code_map = dict(self.__class__.code_map)
+        self.dict_cell = None
+        self.current_file = ""
+
     @abstractmethod
     def parse(self, file_path: Path | str) -> bool:
         """解析词库文件"""
@@ -188,11 +193,14 @@ class BaseParser(ABC):
         encode_data = data[offset.start : offset.end] if offset else data
         return byte2str(encode_data, encoding, is_strip)
 
-    def _check_pinyin(self, pinyin_list: list[str], allow_en: bool = True) -> bool:
-        """判断拼音需要是否有效
+    def _has_invalid_pinyin(self, pinyin_list: list[str], allow_en: bool = True) -> bool:
+        """判断拼音列表中是否存在无效拼音
         allow_en允许单个英文字母
         """
         return not all([py in self.pinyin_syllables or (allow_en and py in self.letters) for py in pinyin_list])
+
+    def _check_pinyin(self, pinyin_list: list[str], allow_en: bool = True) -> bool:
+        return self._has_invalid_pinyin(pinyin_list, allow_en)
 
 
 class BaseConverter(ABC):
