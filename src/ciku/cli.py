@@ -53,8 +53,14 @@ def show_progress(iterable, prefix: str = "", suffix: str = "", length: int = 50
 class ParserFactory:
     """解析器工厂"""
 
-    def __init__(self) -> None:
+    def __init__(self, parser_classes: tuple[Type[BaseParser], ...] | None = None) -> None:
         self._parsers: dict[str, Type[BaseParser]] = {}
+        if parser_classes is None:
+            from ciku.parser.registry import PARSER_CLASSES
+
+            parser_classes = PARSER_CLASSES
+        for parser_class in parser_classes:
+            self.register_parser(parser_class)
 
     def register_parser(self, parser_class: Type[BaseParser]) -> None:
         if hasattr(parser_class, "suffix"):
@@ -78,29 +84,9 @@ class ParserToolkit:
 
     def __init__(self):
         self.factory = ParserFactory()
-        self._register_parsers()
 
     def _register_parsers(self):
-        # 动态导入并注册所有解析器
-        from ciku import (
-            BaiduMobileParser,
-            BaiduParser,
-            HuayuParser,
-            QQParser,
-            QQV1Parser,
-            SogouParser,
-        )
-
-        parsers = [
-            SogouParser,
-            BaiduParser,
-            BaiduMobileParser,
-            QQParser,
-            QQV1Parser,
-            HuayuParser,
-        ]
-        for parser in parsers:
-            self.factory.register_parser(parser)
+        return None
 
     def process(self, file_path: Path, save_file: Path, keep_error: bool) -> bool:
         parser = self.get_parser(file_path)

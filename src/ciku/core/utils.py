@@ -1,4 +1,5 @@
 import logging
+import struct
 from pathlib import Path
 from typing import Literal
 
@@ -16,7 +17,26 @@ def byte2uint(
     byte_data: bytes, byteorder: Literal["little", "big"] = "little", max_len: int = 8
 ) -> int:
     # N字节编码转换成整数
-    return int.from_bytes(byte_data[:max_len], byteorder=byteorder)
+    view = memoryview(byte_data)
+    size = min(len(view), max_len)
+    if byteorder == "little":
+        if size == 1:
+            return view[0]
+        if size == 2:
+            return struct.unpack_from("<H", view)[0]
+        if size == 4:
+            return struct.unpack_from("<I", view)[0]
+        if size == 8:
+            return struct.unpack_from("<Q", view)[0]
+    elif size == 1:
+        return view[0]
+    elif size == 2:
+        return struct.unpack_from(">H", view)[0]
+    elif size == 4:
+        return struct.unpack_from(">I", view)[0]
+    elif size == 8:
+        return struct.unpack_from(">Q", view)[0]
+    return int.from_bytes(view[:size], byteorder=byteorder)
 
 
 def byte2str(byte_data: bytes, encoding: str, is_strip: bool = True) -> str:

@@ -198,7 +198,7 @@ class SogouParser(BaseParser):
         for _ in range(block_len):
             char_count = byte2uint(word_data[pos : pos + step])  # 词语对应字数
             pos += step
-            word = self._decode_text(word_data[pos + step : pos + step * char_count], None, None, False) # TODO check
+            word = self._decode_text(word_data[pos : pos + step * char_count], None, None, False)
             pos += step * char_count
 
             entry = WordEntry(word, [], 0, is_error=True)
